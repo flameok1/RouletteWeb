@@ -48,49 +48,54 @@ onUnmounted(() => {
 
 <template>
   <div class="roulette-container">
-    <!-- 玩家金錢顯示區域 -->
-    <div class="money-display">
-      <h2>玩家金錢: ${{ playerMoney.toLocaleString() }}</h2>
-    </div>
-
-    <!-- 下注按鈕區域 -->
-    <div class="bet-buttons">
-      <button
-        v-for="amount in betOptions"
-        :key="amount"
-        :class="['bet-button', { 'selected': selectedBet === amount }]"
-        @click="selectBet(amount)"
-      >
-        ${{ amount }}
-      </button>
-    </div>
-
-    <!-- 轉盤區域 -->
-    <div class="roulette-section">
-      <!-- 轉盤外圈 -->
-      <div class="roulette-wheel">
-        <div
-          v-for="(number, index) in rouletteNumbers"
-          :key="number"
-          class="roulette-number"
-          :style="{
-            transform: `rotate(${(index * 360) / 30}deg) translateY(-200px)`
-          }"
-        >
-          <div class="number-content">
-            <div class="number">{{ number }}</div>
-            <div class="bet-amount">${{ selectedBet }}</div>
-          </div>
-        </div>
+    <!-- 左側控制面板 -->
+    <div class="left-panel">
+      <!-- 玩家金錢顯示區域 -->
+      <div class="money-display">
+        <h2>玩家金錢: ${{ playerMoney.toLocaleString() }}</h2>
       </div>
 
-      <!-- 中央區域 -->
-      <div class="center-area">
-        <div class="round-info">
-          <h3>第 {{ currentRound }} 輪</h3>
-          <div class="countdown">
-            <span class="countdown-label">倒數時間:</span>
-            <span class="countdown-time">{{ countdown }}s</span>
+      <!-- 下注按鈕區域 -->
+      <div class="bet-buttons">
+        <button
+          v-for="amount in betOptions"
+          :key="amount"
+          :class="['bet-button', { 'selected': selectedBet === amount }]"
+          @click="selectBet(amount)"
+        >
+          ${{ amount }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 右側轉盤區域 -->
+    <div class="right-panel">
+      <div class="roulette-section">
+        <!-- 轉盤外圈 -->
+        <div class="roulette-wheel">
+          <div
+            v-for="(number, index) in rouletteNumbers"
+            :key="number"
+            class="roulette-number"
+            :style="{
+              transform: `rotate(${(index * 360) / 30}deg) translateY(-200px)`
+            }"
+          >
+            <div class="number-content">
+              <div class="number">{{ number }}</div>
+              <div class="bet-amount">${{ selectedBet }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 中央區域 -->
+        <div class="center-area">
+          <div class="round-info">
+            <h3>第 {{ currentRound }} 輪</h3>
+            <div class="countdown">
+              <span class="countdown-label">倒數時間:</span>
+              <span class="countdown-time">{{ countdown }}s</span>
+            </div>
           </div>
         </div>
       </div>
@@ -101,8 +106,26 @@ onUnmounted(() => {
 <style scoped>
 .roulette-container {
   min-height: 100vh;
+  display: flex;
   padding: 20px;
   font-family: 'Arial', sans-serif;
+  gap: 30px;
+}
+
+/* 左側控制面板 */
+.left-panel {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 右側轉盤面板 */
+.right-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 玩家金錢顯示區域 */
@@ -114,24 +137,23 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .money-display h2 {
   color: #f39c12;
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   margin: 0;
+  text-align: center;
 }
 
 /* 下注按鈕區域 */
 .bet-buttons {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   gap: 15px;
-  margin-bottom: 30px;
 }
 
 .bet-button {
@@ -144,7 +166,7 @@ onUnmounted(() => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 80px;
+  width: 100%;
 }
 
 .bet-button:hover {
@@ -165,21 +187,19 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 600px;
+  width: 100%;
+  height: 100%;
 }
 
 .roulette-wheel {
   position: relative;
   width: 500px;
   height: 500px;
-  border-radius: 50%;
-  border: 5px solid #2c3e50;
-  background: radial-gradient(circle, #34495e, #2c3e50);
 }
 
 .roulette-number {
   position: absolute;
-  top: 50%;
+  top: 5%;
   left: 50%;
   width: 100px;
   height: 100px;
@@ -217,7 +237,7 @@ onUnmounted(() => {
 /* 中央區域 */
 .center-area {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 200px;

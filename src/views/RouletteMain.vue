@@ -1,9 +1,263 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 
+// 玩家金錢
+const playerMoney = ref(100000)
+
+// 下注金額選項
+const betOptions = [10, 50, 100, 500, 1000]
+const selectedBet = ref(10)
+
+// 遊戲狀態
+const currentRound = ref(1)
+const countdown = ref(30)
+const isGameActive = ref(true)
+
+// 轉盤數字 (1-30)
+const rouletteNumbers = Array.from({ length: 30 }, (_, i) => i + 1)
+
+// 倒數計時器
+let countdownTimer: number | null = null
+
+const startCountdown = () => {
+  countdownTimer = setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--
+    } else {
+      // 倒數結束，開始新一輪
+      currentRound.value++
+      countdown.value = 30
+    }
+  }, 1000)
+}
+
+const selectBet = (amount: number) => {
+  selectedBet.value = amount
+}
+
+onMounted(() => {
+  startCountdown()
+})
+
+onUnmounted(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+})
+</script>
 
 <template>
-    
+  <div class="roulette-container">
+    <!-- 玩家金錢顯示區域 -->
+    <div class="money-display">
+      <h2>玩家金錢: ${{ playerMoney.toLocaleString() }}</h2>
+    </div>
+
+    <!-- 下注按鈕區域 -->
+    <div class="bet-buttons">
+      <button
+        v-for="amount in betOptions"
+        :key="amount"
+        :class="['bet-button', { 'selected': selectedBet === amount }]"
+        @click="selectBet(amount)"
+      >
+        ${{ amount }}
+      </button>
+    </div>
+
+    <!-- 轉盤區域 -->
+    <div class="roulette-section">
+      <!-- 轉盤外圈 -->
+      <div class="roulette-wheel">
+        <div
+          v-for="(number, index) in rouletteNumbers"
+          :key="number"
+          class="roulette-number"
+          :style="{
+            transform: `rotate(${(index * 360) / 30}deg) translateY(-200px)`
+          }"
+        >
+          <div class="number-content">
+            <div class="number">{{ number }}</div>
+            <div class="bet-amount">${{ selectedBet }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中央區域 -->
+      <div class="center-area">
+        <div class="round-info">
+          <h3>第 {{ currentRound }} 輪</h3>
+          <div class="countdown">
+            <span class="countdown-label">倒數時間:</span>
+            <span class="countdown-time">{{ countdown }}s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
+<style scoped>
+.roulette-container {
+  min-height: 100vh;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+}
 
-<style scoped></style>
+/* 玩家金錢顯示區域 */
+.money-display {
+  height: 100px;
+  width: 100%;
+  background: linear-gradient(90deg, #2c3e50, #34495e);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.money-display h2 {
+  color: #f39c12;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+
+/* 下注按鈕區域 */
+.bet-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.bet-button {
+  padding: 15px 25px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: #3498db;
+  color: white;
+  border: 3px solid #000;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.bet-button:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bet-button.selected {
+  border-color: #e74c3c;
+  background: #e74c3c;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+}
+
+/* 轉盤區域 */
+.roulette-section {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 600px;
+}
+
+.roulette-wheel {
+  position: relative;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  border: 5px solid #2c3e50;
+  background: radial-gradient(circle, #34495e, #2c3e50);
+}
+
+.roulette-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  margin-top: -50px;
+  transform-origin: 50px 250px;
+}
+
+.number-content {
+  width: 100%;
+  height: 100%;
+  background: #f1c40f;
+  border: 3px solid #000;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.number {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.bet-amount {
+  font-size: 0.9rem;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+/* 中央區域 */
+.center-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 150px;
+  background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+  border: 4px solid #2c3e50;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.round-info {
+  text-align: center;
+}
+
+.round-info h3 {
+  color: #2c3e50;
+  font-size: 1.3rem;
+  margin: 0 0 15px 0;
+  font-weight: bold;
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.countdown-label {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.countdown-time {
+  color: #e74c3c;
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+</style>

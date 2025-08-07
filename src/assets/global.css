@@ -1,0 +1,4 @@
+body {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background-attachment: fixed; /* 關鍵屬性，讓背景固定不動 */
+}

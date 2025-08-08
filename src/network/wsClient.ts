@@ -3,7 +3,9 @@ import { Protocol } from "@/enums/protocol";
 
 export class WSClient {
     private ws: WebSocket | null = null;
+
     private protoRoot: protobuf.Root | null = null;
+    private protoTypes = new Map();
 
     public isConnected = false;
     public onConnectCB = null as (() => void) | null;
@@ -61,19 +63,17 @@ export class WSClient {
             protobuf.load("proto/login.proto"),
         ]);
 
-        // 合併成一個 Root（方便統一查找）
-        this.protoRoot = new protobuf.Root();
-        this.protoRoot.add(loginRoot.lookupType("loginpackage.LoginRequest"));
+        this.protoTypes.set("loginpackage.LoginRequest", loginRoot.lookupType("loginpackage.LoginRequest"));
     }
 
     sendPacket(protocolId: Protocol, messageName: string, payload: object)
     {
-        if (!this.protoRoot) {
+        if (!this.protoTypes.has(messageName)) {
             console.error("Protos not loaded");
             return;
         }
 
-        const MessageType = this.protoRoot.lookupType(messageName);
+        const MessageType = this.protoTypes.get(messageName);
         const errMsg = MessageType.verify(payload);
         if (errMsg) throw Error(errMsg);
 
@@ -81,13 +81,19 @@ export class WSClient {
         const bodyBuffer = MessageType.encode(message).finish(); // Uint8Array
 
         // 加上協議 ID（4 byte int32）
-        const header = new ArrayBuffer(4);
-        new DataView(header).setInt32(0, protocolId, true); // 小端序（C++ 注意對應）
+        const protocolHeader = new ArrayBuffer(4);
+        new DataView(protocolHeader).setInt32(0, protocolId, true); // 小端序（C++ 注意對應）
+
+        // 封包長度頭（4 bytes）= 協議 ID + body 長度
+        const packetLen = protocolHeader.byteLength + bodyBuffer.byteLength;
+        const lengthHeader = new ArrayBuffer(4);
+        new DataView(lengthHeader).setInt32(0, packetLen, true);
 
         // 合併
-        const packet = new Uint8Array(header.byteLength + bodyBuffer.byteLength);
-        packet.set(new Uint8Array(header), 0);
-        packet.set(bodyBuffer, header.byteLength);
+        const packet = new Uint8Array(protocolHeader.byteLength + lengthHeader.byteLength + bodyBuffer.byteLength);
+        packet.set(new Uint8Array(protocolHeader), 0);
+        packet.set(new Uint8Array(lengthHeader), protocolHeader.byteLength);
+        packet.set(bodyBuffer, protocolHeader.byteLength + lengthHeader.byteLength);
 
         if(!this.ws){
             console.error("WebSocket is not connected");
@@ -96,6 +102,6 @@ export class WSClient {
 
         console.log(packet);
         // 發送
-        //this.ws.send(packet);
+        this.ws.send(packet);
     }
 }

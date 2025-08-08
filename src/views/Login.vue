@@ -1,16 +1,46 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useGMStore } from '../stores/GameManager.ts'
+import { ref , onMounted } from 'vue'
+import { useGMStore } from '@/stores/GameManager.ts'
+import { Protocol } from '@/enums/protocol';
+import protobuf from "protobufjs";
 
 const GameManager = useGMStore()
 
 const loginAcc = ref('');
 const loginPw = ref('');
 
+let isLogining = false;
+
+onMounted( async () => {
+    await GameManager.wsClient.loadProtos();
+});
+
+const connectCB = () =>
+{
+    isLogining = false;
+    console.log('Connected to WebSocket');
+
+    GameManager.wsClient.sendPacket(
+        Protocol.LoginRequest,
+        "loginpackage.LoginRequest",
+        {
+            account: loginAcc.value,
+            password: loginPw.value
+        }
+    );
+}
 
 const onLogin = () => {
+
+    if(isLogining) {
+        return;
+    }
+
+    isLogining = true;
     console.log('gg ' + loginAcc.value + loginPw.value)
-    GameManager.connect('ws://localhost:8888/ws');
+
+    GameManager.wsClient.onConnectCB = connectCB;
+    GameManager.wsClient.connect('ws://localhost:8888/ws');
 }
 
 </script>

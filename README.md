@@ -1,33 +1,9 @@
 # RouletteWeb
 
-This template should help get you started developing with Vue 3 in Vite.
+這個前端+Server專案是因為我很好奇高併發交易是什麼!?在我仔細研究後，
 
-## Recommended IDE Setup
+股票是高頻交易，就是要一直檢查一直交易，速度要快，
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+那高併發就是同時很多人交易，所以做了這個專案來模擬高併發交易
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+，並使用protobuff讓封包流程更方便，語言是Vue3+typescript+C++。

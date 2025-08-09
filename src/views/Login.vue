@@ -24,7 +24,7 @@ const connectCB = () =>
         Protocol.LoginRequest,
         "loginpackage.LoginRequest",
         {
-            account: loginAcc.value,
+            username: loginAcc.value,
             password: loginPw.value
         }
     );

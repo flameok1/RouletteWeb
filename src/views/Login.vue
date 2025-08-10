@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref , onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGMStore } from '@/stores/GameManager.ts'
 import { Protocol } from '@/enums/protocol';
-import protobuf from "protobufjs";
 
+const router = useRouter()
 const GameManager = useGMStore()
 
 const loginAcc = ref('');
@@ -12,7 +13,7 @@ const loginPw = ref('');
 let isLogining = false;
 
 onMounted( async () => {
-    await GameManager.wsClient.loadProtos();
+
 });
 
 const connectCB = () =>
@@ -20,15 +21,44 @@ const connectCB = () =>
     isLogining = false;
     console.log('Connected to WebSocket');
 
-    GameManager.wsClient.sendPacket(
-        Protocol.LoginRequest,
-        "loginpackage.LoginRequest",
-        {
-            username: loginAcc.value,
-            password: loginPw.value
-        }
+    GameManager.wsClient.sendPacket
+    (
+        GameManager.messageHandle.generateSendPacket(
+            Protocol.LoginRequest,
+            "loginpackage.LoginRequest",
+            {
+                username: loginAcc.value,
+                password: loginPw.value
+            }
+        )
     );
 }
+
+const messageCB = (data: Uint8Array) => {
+    console.log('Received message:', data);
+
+    var MessageData = GameManager.messageHandle.handleMessage(data);
+
+    console.log("封包長度:", MessageData.len);
+    console.log("協議 ID:", MessageData.protocol);
+    console.log("Payload:", MessageData.payload);
+
+
+    switch (MessageData.protocol) {
+        case Protocol.LoginResponse:
+            console.log("處理 LoginResponse 協議");
+            const decodedMessage = GameManager.messageHandle.decodedMessage("loginpackage.LoginResponse", MessageData.payload);
+
+            console.log('使用者名稱:', decodedMessage.username);
+            console.log('密碼:', decodedMessage.password);
+            break;
+    }
+
+    GameManager.wsClient.onMessageCB = null; // Clear the callback after handling the message
+    isLogining = false; // Reset the login state
+
+    router.push('/RouletteMain')
+};
 
 const onLogin = () => {
 
@@ -40,6 +70,7 @@ const onLogin = () => {
     console.log('gg ' + loginAcc.value + loginPw.value)
 
     GameManager.wsClient.onConnectCB = connectCB;
+    GameManager.wsClient.onMessageCB = messageCB;
     GameManager.wsClient.connect('ws://localhost:8888/ws');
 }
 

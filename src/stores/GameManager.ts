@@ -8,7 +8,10 @@ export const useGMStore = defineStore('GameManager', () => {
   const wsClient = new WSClient();
   const messageHandle = new MessageHandle();
 
+  const playerMoney = ref(100000);
+
   return { wsClient,
            messageHandle,
+           playerMoney,
           }
 })

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useGMStore } from '@/stores/GameManager.ts'
+import { Protocol } from '@/enums/protocol';
 
-// 玩家金錢
-const playerMoney = ref(100000)
+const GameManager = useGMStore()
+
 
 // 下注金額選項
 const betOptions = [10, 50, 100, 500, 1000]
@@ -35,8 +37,43 @@ const selectBet = (amount: number) => {
   selectedBet.value = amount
 }
 
+const messageCB = (data: Uint8Array) => {
+    console.log('Received message:', data);
+
+    var MessageData = GameManager.messageHandle.handleMessage(data);
+
+    console.log("封包長度:", MessageData.len);
+    console.log("協議 ID:", MessageData.protocol);
+    console.log("Payload:", MessageData.payload);
+
+
+    switch (MessageData.protocol) {
+        case Protocol.CountDownSync:
+            const decodedMessage = GameManager.messageHandle.decodedMessage("gamepackage.CountDownSync", MessageData.payload);
+
+            countdown.value = decodedMessage.countdown;
+            break;
+    }
+};
+
+const startGame = () => {
+    GameManager.wsClient.sendPacket
+    (
+        GameManager.messageHandle.generateSendPacket(
+            Protocol.StartGameRequest,
+            "gamepackage.StartRequest",
+            {
+              playermoney : GameManager.playerMoney,
+            }
+        )
+    );
+
+    startCountdown()
+}
+
 onMounted(() => {
-  startCountdown()
+  GameManager.wsClient.onMessageCB = messageCB;
+  startGame()
 })
 
 onUnmounted(() => {
@@ -52,7 +89,7 @@ onUnmounted(() => {
     <div class="left-panel">
       <!-- 玩家金錢顯示區域 -->
       <div class="money-display">
-        <h2>玩家金錢: ${{ playerMoney.toLocaleString() }}</h2>
+        <h2>玩家金錢: ${{ GameManager.playerMoney.toLocaleString() }}</h2>
       </div>
 
       <!-- 下注按鈕區域 -->

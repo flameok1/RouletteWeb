@@ -23,8 +23,9 @@ export class MessageHandle {
     }
 
     private async loadProtoTypes() {
-        const [loginRoot] = await Promise.all([
+        const [loginRoot, gameRoot] = await Promise.all([
             protobuf.load("proto/login.proto"),
+            protobuf.load("proto/game.proto"),
         ]);
         
         const collectTypes = (obj: protobuf.ReflectionObject) => {
@@ -40,6 +41,7 @@ export class MessageHandle {
         };
 
         loginRoot.nestedArray.forEach((nested) => collectTypes(nested));
+        gameRoot.nestedArray.forEach((nested) => collectTypes(nested));
     }
 
     public handleMessage(data: Uint8Array) {

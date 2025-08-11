@@ -13,7 +13,6 @@ const selectedBet = ref(10)
 // 遊戲狀態
 const currentRound = ref(1)
 const countdown = ref(30)
-const isGameActive = ref(true)
 
 // 轉盤數字 (1-30)
 const rouletteNumbers = Array.from({ length: 30 }, (_, i) => i + 1)
@@ -22,13 +21,14 @@ const rouletteNumbers = Array.from({ length: 30 }, (_, i) => i + 1)
 let countdownTimer: number | null = null
 
 const startCountdown = () => {
+  if (countdownTimer !== null) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+
   countdownTimer = setInterval(() => {
     if (countdown.value > 0) {
       countdown.value--
-    } else {
-      // 倒數結束，開始新一輪
-      currentRound.value++
-      countdown.value = 30
     }
   }, 1000)
 }
@@ -52,6 +52,8 @@ const messageCB = (data: Uint8Array) => {
             const decodedMessage = GameManager.messageHandle.decodedMessage("gamepackage.CountDownSync", MessageData.payload);
 
             countdown.value = decodedMessage.countdown;
+            currentRound.value = decodedMessage.round;
+            startCountdown();
             break;
     }
 };
@@ -67,8 +69,6 @@ const startGame = () => {
             }
         )
     );
-
-    startCountdown()
 }
 
 onMounted(() => {
@@ -131,7 +131,7 @@ onUnmounted(() => {
             <h3>第 {{ currentRound }} 輪</h3>
             <div class="countdown">
               <span class="countdown-label">倒數時間:</span>
-              <span class="countdown-time">{{ countdown }}s</span>
+              <span class="countdown-time">{{ countdown }}</span>
             </div>
           </div>
         </div>

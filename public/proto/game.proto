@@ -9,4 +9,5 @@ message StartRequest {
 
 message CountDownSync {
   int32  countdown = 1;
+  int32  round = 2;
 }

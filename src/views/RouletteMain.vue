@@ -16,6 +16,7 @@ const countdown = ref(30)
 
 // 轉盤數字 (1-30)
 const rouletteNumbers = Array.from({ length: 30 }, (_, i) => i + 1)
+const bets = ref<number[]>(new Array(30).fill(0));
 
 // 倒數計時器
 let countdownTimer: number | null = null
@@ -37,14 +38,28 @@ const selectBet = (amount: number) => {
   selectedBet.value = amount
 }
 
-const messageCB = (data: Uint8Array) => {
-    console.log('Received message:', data);
+const betsUpdate = (index: number, amount: number) => {
+  if (index < 0 || index >= bets.value.length) return;
 
+  GameManager.wsClient.sendPacket
+    (
+        GameManager.messageHandle.generateSendPacket(
+            Protocol.BetRequest,
+            "gamepackage.BetRequest",
+            {
+              betnum : index,
+              amount: amount,
+            }
+        )
+    );
+}
+
+const messageCB = (data: Uint8Array) => {
     var MessageData = GameManager.messageHandle.handleMessage(data);
 
-    console.log("封包長度:", MessageData.len);
-    console.log("協議 ID:", MessageData.protocol);
-    console.log("Payload:", MessageData.payload);
+    //console.log("封包長度:", MessageData.len);
+    //console.log("協議 ID:", MessageData.protocol);
+    //console.log("Payload:", MessageData.payload);
 
 
     switch (MessageData.protocol) {
@@ -54,6 +69,18 @@ const messageCB = (data: Uint8Array) => {
             countdown.value = decodedMessage.countdown;
             currentRound.value = decodedMessage.round;
             startCountdown();
+            break;
+
+        case Protocol.BetResponse:
+            const betResponse = GameManager.messageHandle.decodedMessage("gamepackage.BetResponse", MessageData.payload);
+            console.log("Bet Response:", betResponse);
+
+            // 更新下注金額
+            if (betResponse.betnum >= 0 && betResponse.betnum < bets.value.length) {
+                bets.value[betResponse.betnum] = betResponse.amount;
+            }
+
+            GameManager.playerMoney = betResponse.playermoney;
             break;
     }
 };
@@ -117,10 +144,11 @@ onUnmounted(() => {
             :style="{
               transform: `rotate(${(index * 360) / 30}deg) translateY(-200px)`
             }"
+            @click="betsUpdate(index, selectedBet)"
           >
             <div class="number-content">
               <div class="number">{{ number }}</div>
-              <div class="bet-amount">${{ selectedBet }}</div>
+              <div class="bet-amount">${{ bets[index] }}</div>
             </div>
           </div>
         </div>
@@ -243,6 +271,7 @@ onUnmounted(() => {
   margin-left: -50px;
   margin-top: -50px;
   transform-origin: 50px 250px;
+  cursor: pointer;
 }
 
 .number-content {

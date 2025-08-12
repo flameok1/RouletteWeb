@@ -33,7 +33,7 @@ export class WSClient {
         this.ws.onmessage = (event) => {
             // 檢查收到的資料是否為 ArrayBuffer
             if (event.data instanceof ArrayBuffer) {
-                console.log('Received an ArrayBuffer:', event.data);
+                //console.log('Received an ArrayBuffer:', event.data);
             
                 if (this.onMessageCB) {
                     this.onMessageCB(new Uint8Array(event.data));

@@ -49,8 +49,11 @@ const messageCB = (data: Uint8Array) => {
             console.log("處理 LoginResponse 協議");
             const decodedMessage = GameManager.messageHandle.decodedMessage("loginpackage.LoginResponse", MessageData.payload);
 
-            console.log('使用者名稱:', decodedMessage.username);
-            console.log('密碼:', decodedMessage.password);
+            console.log('使用者id:', decodedMessage.playerid);
+            console.log('money:', decodedMessage.playermoney);
+
+            GameManager.playerId = decodedMessage.playerid;
+            GameManager.playerMoney = decodedMessage.playermoney;
             break;
     }
 

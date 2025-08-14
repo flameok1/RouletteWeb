@@ -6,4 +6,5 @@ export enum Protocol {
   LoginResponse= 1001,
   CountDownSync = 1002,
   BetResponse = 1003,
+  GameResult = 1004,
 }

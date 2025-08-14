@@ -13,6 +13,8 @@ const selectedBet = ref(10)
 // 遊戲狀態
 const currentRound = ref(1)
 const countdown = ref(30)
+const nowWinNumber = ref(1)
+const isLoopWIn = ref(true)
 
 // 轉盤數字 (1-30)
 const rouletteNumbers = Array.from({ length: 30 }, (_, i) => i + 1)
@@ -20,6 +22,7 @@ const bets = ref<number[]>(new Array(30).fill(0));
 
 // 倒數計時器
 let countdownTimer: number | null = null
+let loopWinTimer: number | null = null
 
 const startCountdown = () => {
   if (countdownTimer !== null) {
@@ -32,6 +35,24 @@ const startCountdown = () => {
       countdown.value--
     }
   }, 1000)
+}
+
+const loopWin = () => {
+  stopLoopWin();
+
+  loopWinTimer = setInterval(() => {
+    nowWinNumber.value++;
+    if(nowWinNumber.value > 30) {
+      nowWinNumber.value = 1;
+    }
+  }, 300)
+}
+
+const stopLoopWin = () => {
+  if (loopWinTimer !== null) {
+    clearInterval(loopWinTimer);
+    loopWinTimer = null;
+  }
 }
 
 const selectBet = (amount: number) => {
@@ -69,6 +90,10 @@ const messageCB = (data: Uint8Array) => {
             countdown.value = decodedMessage.countdown;
             currentRound.value = decodedMessage.round;
             startCountdown();
+
+            if(loopWinTimer == null) {
+                loopWin();
+            }
             break;
 
         case Protocol.BetResponse:
@@ -82,10 +107,29 @@ const messageCB = (data: Uint8Array) => {
 
             GameManager.playerMoney = betResponse.playermoney;
             break;
+
+          case Protocol.GameResult:
+            const gameResult = GameManager.messageHandle.decodedMessage("gamepackage.BetResult", MessageData.payload);
+            console.log("Game Result:", gameResult);
+
+            stopLoopWin();
+            nowWinNumber.value = gameResult.winnum;
+            GameManager.playerMoney = gameResult.playermoney;
+
+            // 重置下注金額
+            bets.value.fill(0);
+            break;
     }
 };
 
 const startGame = () => {
+    loopWin();
+
+    if(GameManager.wsClient.isConnected === false) {
+        console.error("WebSocket is not connected.");
+        return;
+    }
+
     GameManager.wsClient.sendPacket
     (
         GameManager.messageHandle.generateSendPacket(
@@ -146,7 +190,7 @@ onUnmounted(() => {
             }"
             @click="betsUpdate(index, selectedBet)"
           >
-            <div class="number-content">
+            <div class="number-content" :class="{ 'bd_red': nowWinNumber == index + 1 }">
               <div class="number">{{ number }}</div>
               <div class="bet-amount">${{ bets[index] }}</div>
             </div>
@@ -286,6 +330,14 @@ onUnmounted(() => {
   justify-content: center;
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.boarder_red {
+  border: 3px solid #ff1900;
+}
+
+.bd_red {
+  background: #e74c3c;
 }
 
 .number {

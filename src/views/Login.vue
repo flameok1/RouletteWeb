@@ -87,7 +87,7 @@ const onLogin = () => {
                 <img src="/img/logo.png" alt="alt logo"/>
             </div>
 
-            <div class="input_title"> title </div>
+            <div class="input_title"> 火焰大轉盤 </div>
 
             <div class="input_panel">
                 <div class="login-desc">帳號</div>
